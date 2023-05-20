@@ -27,6 +27,12 @@ async function run() {
 
 		const toyCollection = client.db("toyDB").collection("allToys");
 
+		// Creating index on toyName fields
+		const indexKeys = { toyName: 1 }; 
+		const indexOptions = { name: "toyName" };
+		const result = await toyCollection.createIndex(indexKeys, indexOptions);
+		// console.log(result);
+
 		//get all toys from db
 		app.get("/all-toys", async (req, res) => {
 			const toys = await toyCollection
@@ -55,6 +61,18 @@ async function run() {
 			}
 		});
 
+        //get toy list by their name
+        app.get("/all-toys/:text", async (req, res) => {
+            const searchKey = req.params.text;
+            const result = await toyCollection
+              .find({
+                $or: [
+                  { toyName: { $regex: searchKey, $options: "i" } },
+                ],
+              })
+              .toArray();
+            res.send(result);
+          });
 		// Send a ping to confirm a successful connection
 		await client.db("admin").command({ ping: 1 });
 		console.log(
