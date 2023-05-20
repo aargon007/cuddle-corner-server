@@ -27,6 +27,27 @@ async function run() {
 
         const toyCollection = client.db('toyDB').collection('allToys');
 
+        //add toy to db
+        app.post("/add-toy", async (req, res) => {
+            //get details from client
+            const body = req.body;
+            body.createdAt = new Date();
+            console.log(body);
+            //post to dbcollection
+            const result = await toyCollection.insertOne(body);
+
+            if (result?.insertedId) {
+              return res.status(200).send(result);
+            } else {
+              return res.status(404).send({
+                message: "can not post toy details, try again leter",
+                status: false,
+              });
+            }
+          });
+
+
+          
         // Send a ping to confirm a successful connection
         await client.db("admin").command({ ping: 1 });
         console.log("Pinged your deployment. You successfully connected to MongoDB!");
