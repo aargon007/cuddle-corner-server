@@ -107,9 +107,18 @@ async function run() {
 					price: body.price,
 					quantity: body.quantity,
 					description: body.description,
+					image: body.image,
 				},
 			};
 			const result = await toyCollection.updateOne(filter, updateToyItem);
+			res.send(result);
+		});
+
+		//delete an toy item
+		app.delete("/deleteToy/:id", async (req, res) => {
+			const id = req.params.id;
+			const myItem = { _id: new ObjectId(id) };
+			const result = await toyCollection.deleteOne(myItem);
 			res.send(result);
 		});
 
