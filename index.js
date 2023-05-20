@@ -18,28 +18,63 @@ const client = new MongoClient(uri, {
 		strict: true,
 		deprecationErrors: true,
 	},
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+	maxPoolSize: 60,
 });
 
 async function run() {
 	try {
 		// Connect the client to the server	(optional starting in v4.7)
-		client.connect();
+		// client.connect();
 
 		const toyCollection = client.db("toyDB").collection("allToys");
 
 		// Creating index on toyName fields
-		const indexKeys = { toyName: 1 }; 
+		const indexKeys = { toyName: 1 };
 		const indexOptions = { name: "toyName" };
 		const result = await toyCollection.createIndex(indexKeys, indexOptions);
 		// console.log(result);
 
-		//get all toys from db
+		//get all toys from db (latest on top)
 		app.get("/all-toys", async (req, res) => {
 			const toys = await toyCollection
 				.find({})
 				.sort({ createdAt: -1 })
+				.limit(20)
 				.toArray();
 			res.send(toys);
+		});
+
+		//load single toy details based on id
+		app.get("/toy/:id", async (req, res) => {
+			const id = req.params.id;
+			const toy = await toyCollection.findOne({
+				_id: new ObjectId(id),
+			});
+			res.send(toy);
+		});
+
+		//get toy list by their name
+		app.get("/all-toys/:text", async (req, res) => {
+			const searchKey = req.params.text;
+			const result = await toyCollection
+				.find({
+					$or: [{ toyName: { $regex: searchKey, $options: "i" } }],
+				})
+				.toArray();
+			res.send(result);
+		});
+
+		//find toy list for single user
+		app.get("/my-toys/:email", async (req, res) => {
+			const email = req.params.email;
+			const myToys = await toyCollection
+				.find({
+					sellerEmail: email,
+				})
+				.toArray();
+			res.send(myToys);
 		});
 
 		//add toy to db
@@ -61,18 +96,6 @@ async function run() {
 			}
 		});
 
-        //get toy list by their name
-        app.get("/all-toys/:text", async (req, res) => {
-            const searchKey = req.params.text;
-            const result = await toyCollection
-              .find({
-                $or: [
-                  { toyName: { $regex: searchKey, $options: "i" } },
-                ],
-              })
-              .toArray();
-            res.send(result);
-          });
 		// Send a ping to confirm a successful connection
 		await client.db("admin").command({ ping: 1 });
 		console.log(
