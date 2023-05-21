@@ -77,6 +77,29 @@ async function run() {
 			res.send(myToys);
 		});
 
+		//query 
+		app.get("/my-toys", async (req, res) => {
+
+			let query = {};
+			let sorts = req.query.isAscending;
+
+			if(req.query.sellerEmail){
+				query = {
+					sellerEmail : req.query.sellerEmail
+				};
+			}
+			
+			// console.log(req.query.isAscending);
+			// console.log(sorts);
+			const myToys = await toyCollection
+				.find(
+					query
+				)
+				.sort({ price : sorts == "true" ? 1 : -1 })
+				.toArray();
+			res.send(myToys);
+		});
+
 		//add toy to db
 		app.post("/add-toy", async (req, res) => {
 			//get details from client
