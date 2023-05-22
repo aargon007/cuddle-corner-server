@@ -55,7 +55,7 @@ async function run() {
 			res.send(toy);
 		});
 
-		//get toy list by their name
+		//get toy list by their name - search feature
 		app.get("/all-toys/:text", async (req, res) => {
 			const searchKey = req.params.text;
 			const result = await toyCollection
@@ -66,7 +66,7 @@ async function run() {
 			res.send(result);
 		});
 
-		//find toy list for single user
+		//find toy list for single user - alternative method
 		app.get("/my-toys/:email", async (req, res) => {
 			const email = req.params.email;
 			const myToys = await toyCollection
@@ -77,7 +77,7 @@ async function run() {
 			res.send(myToys);
 		});
 
-		//query 
+		//query toy item by email and price sorting
 		app.get("/my-toys", async (req, res) => {
 
 			let query = {};
@@ -88,9 +88,7 @@ async function run() {
 					sellerEmail : req.query.sellerEmail
 				};
 			}
-			
-			// console.log(req.query.isAscending);
-			// console.log(sorts);
+			// console.log(query);
 			const myToys = await toyCollection
 				.find(
 					query
@@ -100,12 +98,34 @@ async function run() {
 			res.send(myToys);
 		});
 
+		//queary by sub category
+		app.get("/category", async (req, res) => {
+
+			let query = {};
+
+			if(req.query.value && req.query.label){
+				query = {
+					sub_category : {
+						value : req.query.value,
+						label : req.query.label,
+					}
+				};
+			}
+			// console.log(query);
+			const subToys = await toyCollection
+				.find(
+					query
+				)
+				.toArray();
+			res.send(subToys);
+		});
+
 		//add toy to db
 		app.post("/add-toy", async (req, res) => {
 			//get details from client
 			const body = req.body;
 			body.createdAt = new Date();
-			console.log(body);
+			// console.log(body);
 			//post to dbcollection
 			const result = await toyCollection.insertOne(body);
 
